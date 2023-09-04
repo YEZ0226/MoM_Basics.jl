@@ -394,12 +394,7 @@ function getNodeElems(::Val{:VTK}, pathname::ST; FT::Type{T}=Precision.FT, meshU
                     next!(pmeter)
                     line = readline(VtkMesh)
                     # node[:, i] = parse.(FT, split(line))
-                    node[:, i] = try 
-                                    parse.(FT, split(line))
-                                 catch
-                                    @warn "Parse Float32 failed, find data out of the range."
-                                    convert.(Float32, parse.(Float64, split(line)))
-                                 end
+                    node[:, i] = parse.(Float64, split(line))
                 end
             elseif startswith(line, "POLYGONS")
                 trinum = parse(Int64, split(line)[2])
