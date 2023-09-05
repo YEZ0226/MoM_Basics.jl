@@ -407,19 +407,35 @@ function getNodeElems(::Val{:VTK}, pathname::ST; FT::Type{T}=Precision.FT, meshU
                     triangles[:, i] = parse.(Int64, split(line)[2:end]) .+ 1  # julia数组从1开始所以补1
                 end
             elseif startswith(line, "CELLS")
-                tetranum = parse(Int64, split(line)[2])
-                ## 重新分配四面体数组
-                tetrahedras = zeros(Int64, (4, tetranum))
-                ## 开始处理四面体数据, 循环 tetranum 次
-                for i in 1:tetranum
-                    next!(pmeter)
-                    line = readline(VtkMesh)
-                    tetrahedras[:, i] = parse.(Int64, split(line)[2:end]) .+ 1  # julia数组从1开始所以补1
+                cellNum = parse(Int64, split(line)[2])
+                dataNum = parse(Int64, split(line)[3]) 
+                if (dataNum ÷ cellNum) == 5 #四面体
+                    tetranum = cellNum
+                    ## 重新分配四面体数组
+                    tetrahedras = zeros(Int64, (4, tetranum))
+                    ## 开始处理四面体数据, 循环 tetranum 次
+                    for i in 1:tetranum
+                        next!(pmeter)
+                        line = readline(VtkMesh)
+                        tetrahedras[:, i] = parse.(Int64, split(line)[2:end]) .+ 1  # julia数组从1开始所以补1
+                    end
                 end
+                if (dataNum ÷ cellNum) == 4 #三角形
+                    trinum = cellNum
+                    ## 重新分配四面体数组
+                    triangles = zeros(Int64, (3, trinum))
+                    ## 开始处理四面体数据, 循环 tetranum 次
+                    for i in 1:trinum
+                        next!(pmeter)
+                        line = readline(VtkMesh)
+                        triangles[:, i] = parse.(Int64, split(line)[2:end]) .+ 1  # julia数组从1开始所以补1
+                    end 
+                end 
             else
                 eof(VtkMesh) ? break : continue
             end
         end
+        println("网格文件处理完毕，共得到 $nodenum 个节点、$trinum 个三角形、$tetranum 个四面体、$hexanum 个六面体")
     end
 
     if meshUnit == :mm
