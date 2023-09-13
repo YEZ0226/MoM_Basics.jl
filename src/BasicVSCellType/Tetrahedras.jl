@@ -187,6 +187,7 @@ function setδκ!(geosInfo::AbstractVector{VT}) where {VT<:VolumeCellType}
         end
     end
     # 循环设置δκ
+    lk = SpinLock()
     @threads for it in eachindex(geosInfo)
         # 体网格
         geo   =   geosInfo[it]
@@ -199,7 +200,15 @@ function setδκ!(geosInfo::AbstractVector{VT}) where {VT<:VolumeCellType}
             # 根据在正负面决定加上或减去 κ
             temp =  (geo.facesArea[iface] > 0 ? κ : -κ)
             # 写入值
-            face.δκ += temp
+            # 由于许多面是两个四面体共享的可能出现线程冲突问题, 需要加锁
+            begin
+                lock(lk)
+                try
+                    face.δκ += temp
+                finally
+                    unlock(lk)
+                end
+            end
         end
     end
 end
